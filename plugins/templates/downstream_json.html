@@ -66,10 +66,6 @@
     <br>
     <style>
       label[for="qc_workflow"]::after,
-      label[for="email_address"]::after,
-      label[for="jira_ticket"]::after,
-      label[for="filepath"]::after,
-      label[for="sample_name"]::after,
       label[for="demux_dir"]::after {
         content: "*";
         color: red;
@@ -83,7 +79,7 @@
     <button id="loginButton" type="button" onclick="login()">Login without Cookies</button>
   </form>
 
-  <!-- Your existing flash messages display -->
+  <!-- flash messages  -->
   {% with messages = get_flashed_messages() %}
     {% if messages %}
       <ul class="flashes">
@@ -119,10 +115,10 @@
   }
 
   function handleLoginSuccess(result) {
-    // Handle the successful login response, e.g., update UI or redirect
+    // Handle the successful login response
     console.log('Login successful:', result);
 
-    // Assuming your token is in the 'access_token' property of the result
+    // token is in the 'access_token' property of the result
     const accessToken = result.access_token;
 
     // Display the token on the screen

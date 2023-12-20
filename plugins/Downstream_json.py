@@ -31,8 +31,6 @@ class MyForm(Form):
 @csrf.exempt
 def login_without_cookies():
     print("Received POST request to /login_without_cookies")
-    # Replace this with your actual user authentication logic
-    # For simplicity, always generate an access token for demonstration purposes
     access_token = create_access_token(identity='demo_user')
     return jsonify(access_token=access_token)
 
@@ -67,8 +65,8 @@ class DownstreamBasejsonView(AppBuilderBaseView):
 
 v_appbuilder_view = DownstreamBasejsonView()
 v_appbuilder_package = {
-    "name": "Downstream json Analysis",    # this is the name of the link displayed
-    "category": "Downstream Runs", # This is the name of the tab under     which we have our view
+    "name": "Downstream json Analysis",    
+    "category": "Downstream Runs", 
     "view": v_appbuilder_view
 }
 
