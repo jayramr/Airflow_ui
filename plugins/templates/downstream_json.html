@@ -1,0 +1,182 @@
+{#
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+ #}
+
+{% extends 'appbuilder/baselayout.html' %}
+{% from 'airflow/_messages.html' import show_message %}
+
+{% block page_title -%}
+  {% if title is defined -%}
+    {{ title }} - {{ appbuilder.app_name }}
+  {% else -%}
+    {{ appbuilder.app_name }}
+  {% endif%}
+{% endblock %}
+
+{% block head_meta %}
+  {{ super() }}
+  {% if scheduler_job is defined and (scheduler_job and scheduler_job.is_alive()) %}
+    <meta name="is_scheduler_running" content="True">
+  {% endif %}
+{% endblock %}
+
+{% block head_css %}
+  {{ super() }}
+
+  {% if not appbuilder.app_theme %}
+    {# airflowDefaultTheme.css file contains the styles from local bootstrap-theme.css #}
+    <link rel="stylesheet" type="text/css" href="{{ url_for_asset('airflowDefaultTheme.css') }}">
+  {% endif %}
+  <link rel="stylesheet" type="text/css" href="{{ url_for_asset('materialIcons.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for_asset('main.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for_asset('loadingDots.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for_asset('bootstrap-datetimepicker.min.css') }}">
+  <style type="text/css">
+    {% for state, state_color in state_color_mapping.items() %}
+      span.{{state}} {
+        background-color: {{state_color}};
+      }
+    {% endfor %}
+  </style>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='pin_32.png') }}">
+{% endblock %}
+
+{% block messages %}
+<body>
+  <h3>Downstream Sequence Run</h3>
+  <form method="post">
+    {{ form.csrf_token }}
+    <br>
+    <br>
+    <br>
+    <style>
+      label[for="qc_workflow"]::after,
+      label[for="email_address"]::after,
+      label[for="jira_ticket"]::after,
+      label[for="filepath"]::after,
+      label[for="sample_name"]::after,
+      label[for="demux_dir"]::after {
+        content: "*";
+        color: red;
+      }
+    </style>
+    <p>
+      {{ form.projname.label }}
+      {{ form.projname(style='width: 25%;') }}
+    </p>
+    <button type="submit">Submit</button>
+    <button id="loginButton" type="button" onclick="login()">Login without Cookies</button>
+  </form>
+
+  <!-- Your existing flash messages display -->
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+</body>
+
+<script>
+  async function login() {
+    try {
+      const baseUrl = window.location.origin;
+      const loginUrl = `${baseUrl}/login_without_cookies`;
+
+      console.log('Attempting to fetch:', loginUrl);
+
+      const response = await fetch(loginUrl, { method: 'post' });
+
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        throw new Error(`Request failed with status ${response.status}: ${errorMessage}`);
+      }
+
+      const result = await response.json();
+      handleLoginSuccess(result);
+    } catch (error) {
+      console.error(error);
+      handleLoginError(error.message);
+    }
+  }
+
+  function handleLoginSuccess(result) {
+    // Handle the successful login response, e.g., update UI or redirect
+    console.log('Login successful:', result);
+
+    // Assuming your token is in the 'access_token' property of the result
+    const accessToken = result.access_token;
+
+    // Display the token on the screen
+    alert(`Login successful!\nAccess Token: ${accessToken}`);
+}
+
+  function handleLoginError(errorMessage) {
+    // Handle login errors, e.g., display an error message to the user
+    console.error('Login failed:', errorMessage);
+    alert(`Login failed: ${errorMessage}`);
+  }
+
+  // Attach the login function to the button click event
+  document.getElementById('loginButton').addEventListener('click', login);
+</script>
+
+{% endblock %}
+
+{% block footer %}
+  {% if not current_user.is_anonymous %}
+    {% set version_label = 'Version' %}
+    <footer class="footer">
+      <div class="container">
+        <div>
+          {{ version_label }}: {% if airflow_version %}<a href="https://pypi.python.org/pypi/apache-airflow/{{ airflow_version }}" target="_blank">v{{ airflow_version }}</a>{% else %} N/A{% endif %}
+          {% if git_version %}<br>Git Version: <strong>{{ git_version }}</strong>{% endif %}
+        </div>
+        <div></div>
+      </div>
+    </footer>
+  {% endif %}
+{% endblock %}
+
+{% block tail_js %}
+  {{ super() }}
+
+  <script>
+    // below variables are used in main.js
+    // keep as var, changing to const or let breaks other code
+    var Airflow = {
+      serverTimezone: '{{ server_timezone }}',
+      defaultUITimezone: '{{ default_ui_timezone }}',
+    };
+    var hostName = '{{ hostname }}';
+    var csrfToken = '{{ csrf_token() }}';
+    $('time[title]').tooltip();
+  </script>
+  <script src="{{ url_for_asset('moment.js') }}"></script>
+  <script src="{{ url_for_asset('main.js') }}"></script>
+  <script src="{{ url_for_asset('bootstrap-datetimepicker.min.js') }}"></script>
+  <script src="{{ url_for_asset('bootstrap3-typeahead.min.js') }}"></script>
+
+  {% if analytics_tool is defined and analytics_tool %}
+    {% include "analytics/" + analytics_tool + ".html" %}
+  {% endif %}
+</script>
+{% endblock %}
