@@ -65,7 +65,6 @@
     <br>
     <br>
     <style>
-      label[for="qc_workflow"]::after,
       label[for="demux_dir"]::after {
         content: "*";
         color: red;
@@ -76,10 +75,10 @@
       {{ form.projname(style='width: 25%;') }}
     </p>
     <button type="submit">Submit</button>
-    <button id="loginButton" type="button" onclick="login()">Login without Cookies</button>
+    <button type="button" onclick="login()">Login without Cookies</button>
   </form>
 
-  <!-- flash messages  -->
+  <!-- Your existing flash messages display -->
   {% with messages = get_flashed_messages() %}
     {% if messages %}
       <ul class="flashes">
@@ -93,47 +92,12 @@
 
 <script>
   async function login() {
-    try {
-      const baseUrl = window.location.origin;
-      const loginUrl = `${baseUrl}/login_without_cookies`;
-
-      console.log('Attempting to fetch:', loginUrl);
-
-      const response = await fetch(loginUrl, { method: 'post' });
-
-      if (!response.ok) {
-        const errorMessage = await response.text();
-        throw new Error(`Request failed with status ${response.status}: ${errorMessage}`);
-      }
-
+      const response = await fetch('/login_without_cookies', { method: 'post' });
       const result = await response.json();
-      handleLoginSuccess(result);
-    } catch (error) {
-      console.error(error);
-      handleLoginError(error.message);
-    }
+      alert(JSON.stringify(result));  
   }
-
-  function handleLoginSuccess(result) {
-    // Handle the successful login response
-    console.log('Login successful:', result);
-
-    // token is in the 'access_token' property of the result
-    const accessToken = result.access_token;
-
-    // Display the token on the screen
-    alert(`Login successful!\nAccess Token: ${accessToken}`);
-}
-
-  function handleLoginError(errorMessage) {
-    // Handle login errors, e.g., display an error message to the user
-    console.error('Login failed:', errorMessage);
-    alert(`Login failed: ${errorMessage}`);
-  }
-
-  // Attach the login function to the button click event
-  document.getElementById('loginButton').addEventListener('click', login);
 </script>
+
 
 {% endblock %}
 
@@ -156,8 +120,6 @@
   {{ super() }}
 
   <script>
-    // below variables are used in main.js
-    // keep as var, changing to const or let breaks other code
     var Airflow = {
       serverTimezone: '{{ server_timezone }}',
       defaultUITimezone: '{{ default_ui_timezone }}',
